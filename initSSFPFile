@@ -1,0 +1,146 @@
+#! /bin/bash -
+# 用于初始化ssfp文件
+LC_ALL=C
+PRG="$0"
+PRGDIR=`dirname "${PRG}"`"/"
+templateFolderName="templates"
+echo $0
+echo $PRGDIR
+htmlTemplateFileDir=${PRGDIR}${templateFolderName}"/html.templateFile"
+path="."
+fileName="ssfp"
+htmlFileType=".html"
+jsFileType=".js"
+jsFolderName="js"
+## STARTRegion LongOption
+# from /usr/share/doc/util-linux/examples/getopt-parse.bash
+# Note that we use `"$@"' to let each command-line parameter expand to a 
+# separate word. The quotes around `$@' are essential!
+# We need TEMP as the `eval set --' would nuke the return value of getopt.
+TEMP=`getopt -o p:f:h: --long path:,fileName:,htmlFileType:,jsFileType:,jsFolderName: \
+     -n 'example.bash' -- "$@"`
+
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+	case "$1" in
+		-p|--path) path=$2 ; shift 2 ;;
+		-f|--fileName) fileName=$2 ; shift 2 ;;
+			## c has an optional argument. As we are in quoted mode,
+			## an empty parameter will be generated if its optional
+			## argument is not found.
+			#case "$2" in
+			#	"") echo "Option sourceHTMLFileType, no argument"; shift 2 ;;
+			#	*)  echo "Option sourceHTMLFileType, argument \`$2'"; sourceHTMLFileType=$2 ; shift 2 ;;
+			#esac ;;
+		-h|--htmlFileType) htmlFileType=$2 ; shift 2 ;;
+		--jsFileType) jsFileType=$2 ; shift 2 ;;
+		--jsFolderName) jsFolderName=$2 ; shift 2 ;;
+		--) shift ; break ;;
+		*) echo "Internal error!" ; exit 1 ;;
+	esac
+done
+if [ 0 -ne ${#1} ];
+then
+	echo "Remaining arguments:";
+	for arg do echo '--> '"\`$arg'" ; done
+fi
+## ENDRegion LongOption
+
+## BEGIN pre-format parameters
+path=${path%\/}"/"
+fileName=${fileName}
+htmlFielType="."${htmlFileType#.} # make sure html file type begin with dot
+jsFileType="."${jsFileType#.} # make sure js file type begin with dot
+jsFolderName=${jsFolderName%\/}"/"
+htmlDir=${path}${fileName}${htmlFileType}
+jsDir=${path}${jsFolderName}${fileName}${jsFileType}
+## END pre-format parameters
+## BEGIN deal the status of html file's existence.
+function dealTheExistenceOfHTMLFile(){
+	if [ -f ${htmlDir} ];
+	then
+		local tempCounter=0;
+		local tempYN="";
+		while [ ${tempCounter} -lt 5 ];
+		do
+			tempCounter=$((${tempCounter} + 1));
+			if [ ${tempCounter} -eq 5 ]; then
+				echo "LAST CHANCE.";
+			fi
+			echo "${htmlDir} file already exsit ! do you want to continue and overwite it ? [yes/no]";
+			read tempYN;
+			if [ ${tempYN} = "yes" ]
+			then
+				echo "" > ${htmlDir};
+				echo "html file "${htmlDir}" is emptied."
+				break;
+			elif [ ${tempYN} = "no" ]
+			then
+				echo "abort."
+				exit;
+			else
+				continue;
+			fi
+		done;
+	else
+		touch ${htmlDir}
+		echo "html file "${htmlDir}" is created."
+		break;
+	fi
+}
+## END deal the status of html file's existence.
+## BEGIN write template to the html file
+function writeTempateToTheHTMLFile(){
+
+#	tempString="echo "$(eval cat ${htmlTemplateFileDir});
+#	echo $(eval ${tempString}) > ${htmlDir}
+#	echo " html template's content has been written to "${htmlDir}
+	#eval "echo $(cat ${htmlTemplateFileDir})"
+	#echo $(eval "echo $(cat ${htmlTemplateFileDir})");
+	#echo $(eval "echo $(cat ${htmlTemplateFileDir})") > ${htmlDir}
+	eval "echo $(cat ${htmlTemplateFileDir})" > ${htmlDir}
+	echo " html template's content has been written to "${htmlDir}
+}
+## END write template to the html file
+## BEGIN deal the status of js file's existence.
+function dealTheExistenceOfJSFile(){
+	local tempCounter=0;
+	local tempYN="";
+	while [ ${tempCounter} -lt 5 ];
+	do
+		tempCounter=`expr ${tempCounter} + 1`;
+		if [ -f ${jsDir} ];
+		then
+			echo "${jsDir} file already exsit ! do you want to continue and overwite it ? [yes/no]";
+			read tempYN;
+			if [ ${tempYN} = "yes" ]
+			then
+				echo "" > ${jsDir};
+				echo "js file "${jsDir}" is emptied."
+				break;
+			elif [ ${tempYN} = "no" ]
+			then
+				echo "abort."
+				exit;
+			else
+				continue;
+			fi
+		else
+			touch ${jsDir}
+			echo "js file "${jsDir}" is created."
+			break;
+		fi
+	done;
+}
+## END deal the status of js file's existence.
+## BEGIN to execute
+dealTheExistenceOfHTMLFile
+writeTempateToTheHTMLFile
+dealTheExistenceOfJSFile
+echo "Done."
+## END of execute
+
+
