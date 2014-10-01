@@ -1,0 +1,98 @@
+#! /bin/bash -
+# 用于根据配置将模板文件写入js文件中
+LC_ALL=C
+PRG="$0"
+PRGDIR=`dirname "${PRG}"`"/"
+${configFolderName:="config"}
+${configFileType:="configFile"}
+${templateFolderName:="templates"}
+${templateFileType:="templateFile"}
+echo $0
+echo $PRGDIR
+${path:="."}
+${fileName:="ssfp"}
+${jsConfigFileName:="js"}
+${jsTemplateFileName:="js"}
+${jsFileType:=".js"}
+${jsFolderName:="js"}
+## STARTRegion LongOption
+# from /usr/share/doc/util-linux/examples/getopt-parse.bash
+# Note that we use `"$@"' to let each command-line parameter expand to a 
+# separate word. The quotes around `$@' are essential!
+# We need TEMP as the `eval set --' would nuke the return value of getopt.
+TEMP=`getopt -o p:f: --long path:,jsTemplateFileName:,fileName:,jsFileType:,jsFolderName: \
+     -n 'example.bash' -- "$@"`
+
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+	case "$1" in
+		-p|--path) path=$2 ; shift 2 ;;
+			## c has an optional argument. As we are in quoted mode,
+			## an empty parameter will be generated if its optional
+			## argument is not found.
+			#case "$2" in
+			#	"") echo "Option sourceHTMLFileType, no argument"; shift 2 ;;
+			#	*)  echo "Option sourceHTMLFileType, argument \`$2'"; sourceHTMLFileType=$2 ; shift 2 ;;
+			#esac ;;
+		--jsConfigFileName) jsConfigFileName=$2 ; shift 2 ;;
+		--jsTemplateFileName) jsTemplateFileName=$2 ; shift 2 ;;
+		-f|--fileName) fileName=$2 ; shift 2 ;;
+		--jsFileType) jsFileType=$2 ; shift 2 ;;
+		--jsFolderName) jsFolderName=$2 ; shift 2 ;;
+		--) shift ; break ;;
+		*) echo "Internal error!" ; exit 1 ;;
+	esac
+done
+if [ 0 -ne ${#1} ];
+then
+	echo "Remaining arguments:";
+	for arg do echo '--> '"\`$arg'" ; done
+fi
+## ENDRegion LongOption
+
+## BEGIN pre-format parameters
+path=${path%\/}"/"
+jsConfigFileName=${jsConfigFileName}
+jsTemplateFileName=${jsTemplateFileName}
+fileName=${fileName}
+jsFileType="."${jsFileType#.} # make sure js file type begin with dot
+jsFolderName=${jsFolderName%\/}"/"
+jsDir=${path}${jsFolderName}${fileName}${jsFileType}
+jsConfigFileDir=${PRGDIR}${configFolderName}${jsConfigFileName}${configFileType}
+jsTemplateFileDir=${PRGDIR}${templateFolderName}${jsTemplateFileName}${templateFileType}
+## END pre-format parameters
+## BEGIN scan config file
+function scanConfigFile(){
+	PAIR=eval "echo $(cat ${jsTemplateFileDir})"
+	[[ $PAIR =~ ^\{\"([^\"]+)\":\"([^\"]+)\"\}$ ]] && echo "The key is ${BASH_REMATCH[1]} and the value is ${BASH_REMATCH[2]}"
+}
+## END scan config file
+
+## BEGIN write template to the html file
+function writeTempateToTheJSFile(){
+	source ${jsConfigFileDir}
+	eval "echo $(cat ${jsTemplateFileDir})" >> ${jsDir}
+	echo " content of js template file ("${jsTemplateFileDir}" has been written to "${jsDir}
+}
+## END write template to the html file
+## BEGIN deal the status of js file's existence.
+function dealTheExistenceOfJSFile(){
+	if [ -f ${jsDir} ];
+	then
+		echo "found js file "${jsDir};
+		break;
+	else
+		touch ${jsDir};
+		echo "js file "${jsDir}" is created.";
+		break;
+	fi
+}
+## END deal the status of js file's existence.
+## BEGIN to execute
+dealTheExistenceOfJSFile
+writeTempateToTheJSFile
+echo "Done."
+## END of execute

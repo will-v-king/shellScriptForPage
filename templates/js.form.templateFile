@@ -1,0 +1,115 @@
+var $$form_name$;
+$(function() {
+		init$$form_name$();
+	});
+
+function init$$form_name$() {
+	var i, prop, form_columns_obj, form_columns_ary, form_columns_groups_obj, form_columns_groups_ary, form_btn_funcs_obj, form_btns_obj, form_btns_ary, enable_columns, visible_columns, enable_btns, visible_btns, default_value_obj, change_property_value;
+	/**prepare column data object*/
+	form_columns_groups_obj = $$form_columns_groups_obj$;
+	form_columns_obj = {};
+	for (prop in form_columns_groups_obj) {
+		form_columns_obj = $.extend(form_columns_obj, form_columns_groups_obj[prop]);
+	}
+	/**prepare group data object*/
+	form_columns_groups_ary = $$form_columns_groups_ary$;
+	i = 0;
+	for (prop in form_columns_groups_obj) {
+		form_columns_groups_ary[i].columns = [];
+		for (prop in form_columns_groups_obj[prop]) {
+			form_columns_groups_ary[i].columns.push(prop);
+		}
+		form_columns_groups_ary[i].columns = form_columns_groups_ary[i].columns.join(",");
+		i = i + 1;
+	}
+	/**prepare btn data object*/
+	form_btn_funcs_obj = $$form_btn_funcs_obj$;
+	form_btns_obj = $$form_btns_obj$;
+	/**pre-deal data*/
+	enabled_columns = [];
+	visible_columns = [];
+	enabled_btns = [];
+	visible_btns = [];
+	default_value_obj = {};
+	for (prop in form_columns_obj) {
+		form_columns_obj[prop].hidden = true;
+		form_columns_obj[prop].disable = true;
+	}
+	for (prop in form_btns_obj) {
+		form_btns_obj[prop].hidden = true;
+		form_btns_obj[prop].disable = true;
+	}
+	$$switch_block$
+	change_property_value = function(item_obj, property_obj) { /*直接对其属性赋值*/
+		if (item_obj !== undefined) {
+			for (var prop in property_obj) {
+				item_obj[prop] = property_obj[prop];
+			}
+		}
+	};
+	for (i = 0; i < enabled_columns.length; i++) {
+		change_property_value(form_columns_obj[enabled_columns[i]], {
+				"hidden": false,
+				"disable": false
+			});
+	}
+	for (i = 0; i < visible_columns.length; i++) {
+		change_property_value(form_columns_obj[visible_columns[i]], {
+				"hidden": false
+			});
+	}
+	for (i = 0; i < enabled_btns.length; i++) {
+		change_property_value(form_btns_obj[enabled_btns[i]], {
+				"hidden": false,
+				"disable": false
+			});
+	}
+	for (i = 0; i < visible_btns.length; i++) {
+		change_property_value(form_btns_obj[visible_btns[i]], {
+				"hidden": false
+			});
+	}
+	for (prop in default_value_obj) {
+		change_property_value(form_columns_obj[prop], {
+				"value": default_value_obj[prop]
+			});
+	}
+	/**pre-format data*/
+	form_columns_ary = [];
+	form_btns_ary = [];
+	for (prop in form_columns_obj) {
+		form_columns_ary.push(form_columns_obj[prop]);
+	}
+	for (prop in form_btns_obj) {
+		form_btns_ary.push(form_btns_obj[prop]);
+	}
+	/**init $$form_name$ form*/
+	ui.require("Form");
+	$$form_name$ = new ui.comp.Form({
+			title_text: $$form_title_text$,
+			id: "$$form_name$",
+			column_number: 4,
+			label_width: 100,
+			control_width: 150,
+			width: "100%",
+			default_btns: false,
+			columns: form_columns_ary,
+			groups: form_columns_groups_ary,
+			btns: form_btns_ary
+		}).draw();
+}
+
+function print_value_text(object) {
+	if (showMe !== undefined) {
+		var value_text_obj = {};
+		for (var prop in object) {
+			//value_text_obj[object[prop].field] = object[prop].label;
+			value_text_obj[prop] = object[prop];
+		}
+		showMe(value_text_obj, {
+				newWindow: true,
+				functionNameOnly: true,
+				burning: "CPU"
+			});
+	}
+}
